@@ -1,4 +1,6 @@
-namespace kilozdazolik.Ecommerce.API.Models;
+using kilozdazolik.Ecommerce.API.Features.Products;
+
+namespace kilozdazolik.Ecommerce.API.Features.Sales;
 
 public class SaleDetail
 {

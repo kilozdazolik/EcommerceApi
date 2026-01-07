@@ -1,4 +1,4 @@
-namespace kilozdazolik.Ecommerce.API.Models;
+namespace kilozdazolik.Ecommerce.API.Features.Categories;
 
 public class Category
 {
