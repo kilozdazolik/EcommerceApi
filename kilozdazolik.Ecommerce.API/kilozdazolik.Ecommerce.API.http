@@ -1,0 +1,6 @@
+@kilozdazolik.Ecommerce.API_HostAddress = http://localhost:5239
+
+GET {{kilozdazolik.Ecommerce.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
