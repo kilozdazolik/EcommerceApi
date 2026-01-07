@@ -23,6 +23,12 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
             .HasOne(sd => sd.Product)
             .WithMany(p => p.SaleDetails) 
             .HasForeignKey(sd => sd.ProductId);
+        
+        modelBuilder.Entity<Category>()
+            .HasQueryFilter(c => !c.IsDeleted);
+        
+        modelBuilder.Entity<Product>()
+            .HasQueryFilter(p => !p.IsDeleted);
 
         base.OnModelCreating(modelBuilder);
     }
