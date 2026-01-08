@@ -1,7 +1,5 @@
 using kilozdazolik.Ecommerce.API.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Infrastructure.Internal;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace kilozdazolik.Ecommerce.API.Features.Categories;
 
@@ -41,6 +39,7 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
     {
         return await dbContext.Categories
+            .AsNoTracking()
             .OrderByDescending(c => c.Name)
             .Select(c => new CategoryDto(c.Id,  c.Name))
             .ToListAsync();
