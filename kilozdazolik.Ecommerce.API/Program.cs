@@ -5,6 +5,8 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddControllers();
+
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 
 builder.Services.AddDbContext<AppDbContext>(options =>
@@ -16,6 +18,7 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+app.MapControllers();
 app.UseExceptionHandler();
 app.UseHttpsRedirection();
 app.Run();
