@@ -5,11 +5,17 @@ namespace kilozdazolik.Ecommerce.API.Features.Categories;
 
 public class CategoryService(AppDbContext dbContext) : ICategoryService
 {
-    public async Task CreateCategoryAsync(CreateCategoryDto category)
+    private static void ValidateCategoryName(string name)
+    {
+        if (string.IsNullOrWhiteSpace(name)) 
+            throw new ArgumentException("Category name is required", nameof(name));
+    }
+    
+    public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto category)
     {
         if (category is null) throw new ArgumentNullException(nameof(category));
         
-        if (String.IsNullOrWhiteSpace(category.Name)) throw new  ArgumentException("Category name is required", nameof(category.Name));
+        ValidateCategoryName(category.Name);
 
         bool exists = await dbContext.Categories
             .AnyAsync(c => c.Name == category.Name && !c.IsDeleted);
@@ -26,6 +32,9 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
         
         dbContext.Categories.Add(newCategory);
         await dbContext.SaveChangesAsync();
+        
+        return new CategoryDto(newCategory.Id, newCategory.Name);
+        
     }
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(Guid id)
@@ -34,6 +43,7 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
             .Where(c => c.Id == id)
             .Select(c => new CategoryDto(c.Id,  c.Name))
             .FirstOrDefaultAsync();
+        
     }
 
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync()
@@ -50,13 +60,18 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
         if (dto is null)
             throw new ArgumentNullException(nameof(dto));
 
-        if (string.IsNullOrWhiteSpace(dto.Name))
-            throw new ArgumentException("Category name is required", nameof(dto.Name));
+        ValidateCategoryName(dto.Name);
 
         var category = await dbContext.Categories.FindAsync(id);
 
         if (category is null)
             throw new InvalidOperationException($"Category with id '{id}' not found");
+        
+        bool exists = await dbContext.Categories
+            .AnyAsync(c => c.Name == dto.Name && c.Id != id && !c.IsDeleted);
+
+        if (exists)
+            throw new InvalidOperationException($"A category with name '{dto.Name}' already exists.");
 
         category.Name = dto.Name;
 
@@ -71,6 +86,21 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
 
         category.IsDeleted = true;
 
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task RestoreCategoryAsync(Guid id)
+    {
+        var category = await dbContext.Categories
+            .IgnoreQueryFilters()
+            .FirstOrDefaultAsync(c => c.Id == id);
+        
+        if (category is null) throw new KeyNotFoundException($"Category with id {id} not found");
+
+        if (!category.IsDeleted) return;
+
+        category.IsDeleted = false;
+        
         await dbContext.SaveChangesAsync();
     }
 }
