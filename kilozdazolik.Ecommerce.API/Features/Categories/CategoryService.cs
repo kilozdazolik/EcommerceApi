@@ -1,21 +1,16 @@
 using kilozdazolik.Ecommerce.API.Data;
+using kilozdazolik.Ecommerce.API.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace kilozdazolik.Ecommerce.API.Features.Categories;
 
 public class CategoryService(AppDbContext dbContext) : ICategoryService
 {
-    private static void ValidateCategoryName(string name)
-    {
-        if (string.IsNullOrWhiteSpace(name)) 
-            throw new ArgumentException("Category name is required", nameof(name));
-    }
-    
     public async Task<CategoryDto> CreateCategoryAsync(CreateCategoryDto category)
     {
-        if (category is null) throw new ArgumentNullException(nameof(category));
-        
-        ValidateCategoryName(category.Name);
+        ArgumentNullException.ThrowIfNull(category);
+
+        Helper.ValidateName(category.Name, "Category name is required");
 
         bool exists = await dbContext.Categories
             .AnyAsync(c => c.Name == category.Name && !c.IsDeleted);
@@ -60,7 +55,7 @@ public class CategoryService(AppDbContext dbContext) : ICategoryService
         if (dto is null)
             throw new ArgumentNullException(nameof(dto));
 
-        ValidateCategoryName(dto.Name);
+        Helper.ValidateName(dto.Name, "Name is required");
 
         var category = await dbContext.Categories.FindAsync(id);
 
