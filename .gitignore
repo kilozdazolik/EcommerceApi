@@ -475,3 +475,4 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+/kilozdazolik.Ecommerce.API/Ecommerce.db
