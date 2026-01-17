@@ -19,6 +19,9 @@ namespace kilozdazolik.Ecommerce.API.Features.Products
                 throw new ArgumentException("Invalid Category ID.");
             }
 
+            if (product.Price < 0)
+                throw new ArgumentException("Product price cannot be negative", nameof(product.Price));
+
             Product newProduct = new()
             {
                 Id = Guid.NewGuid(),
@@ -41,9 +44,15 @@ namespace kilozdazolik.Ecommerce.API.Features.Products
                     );
         }
 
-        public Task DeleteProductAsync(Guid id)
+        public async Task DeleteProductAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var product = await dbContext.Products.FindAsync(id);
+
+            if (product is null) throw new KeyNotFoundException($"Product with id {id} not found");
+
+            product.IsDeleted = true;
+
+            await dbContext.SaveChangesAsync();
         }
 
         public async Task<ProductDto?> GetProductByIdAsync(Guid id)
@@ -61,19 +70,78 @@ namespace kilozdazolik.Ecommerce.API.Features.Products
                     .FirstOrDefaultAsync();
         }
 
-        public Task<IEnumerable<ProductDto>> GetProductsAsync()
+        public async Task<IEnumerable<ProductDto>> GetProductsAsync(int pageIndex, int pageSize)
         {
-            throw new NotImplementedException();
+            return await  dbContext.Products
+                .AsNoTracking()
+                    .Where(p => !p.IsDeleted)
+                    .OrderBy(p => p.Name)
+                    .Skip((pageIndex - 1) * pageSize)
+                    .Take(pageSize)
+                    .Select(p => new ProductDto(
+                        p.Id,
+                        p.Category.Id,     
+                        p.Category.Name,  
+                        p.Name,
+                        p.Price,
+                        p.IsDeleted
+                    ))
+                    .ToListAsync();
         }
 
-        public Task RestoreProductAsync(Guid id)
+        public async Task RestoreProductAsync(Guid id)
         {
-            throw new NotImplementedException();
+            var product = await dbContext.Products
+                .IgnoreQueryFilters()
+                .FirstOrDefaultAsync(p => p.Id == id);
+
+            if (product is null)
+                throw new KeyNotFoundException($"Product with id {id} not found");
+
+            var category = await dbContext.Categories
+                    .IgnoreQueryFilters()
+                    .FirstOrDefaultAsync(c => c.Id == product.CategoryId);
+
+            if (category is null || category.IsDeleted)
+            {
+                throw new InvalidOperationException("Cannot restore product because its category is deleted.");
+            }
+
+            product.IsDeleted = false;
+
+            await dbContext.SaveChangesAsync();
         }
 
-        public Task UpdateProductAsync(Guid id, UpdateProductDto product)
+        public async Task UpdateProductAsync(Guid id, UpdateProductDto dto)
         {
-            throw new NotImplementedException();
+            var product = await dbContext.Products.FindAsync(id);
+
+            if (product is null)
+                throw new InvalidOperationException($"Product with id '{id}' not found");
+
+            if (dto is null)
+                throw new ArgumentNullException(nameof(dto));
+
+            Helper.ValidateName(dto.Name, "Product name is required");
+
+            if (dto.Price < 0)
+                throw new ArgumentException("Product price cannot be negative", nameof(dto.Price));
+
+            if (dto.CategoryId != product.CategoryId)
+            {
+                var category = await dbContext.Categories.FindAsync(dto.CategoryId);
+                if (category is null || category.IsDeleted)
+                {
+                    throw new ArgumentException("Invalid Category ID.");
+                }
+
+                product.CategoryId = dto.CategoryId;
+
+            }
+            product.Name = dto.Name;
+            product.Price = dto.Price;
+
+            await dbContext.SaveChangesAsync();
         }
     }
 }

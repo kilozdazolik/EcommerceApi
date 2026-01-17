@@ -4,8 +4,8 @@
     {
         Task<ProductDto> CreateProductAsync(CreateProductDto product);
         Task<ProductDto?> GetProductByIdAsync(Guid id);
-        Task<IEnumerable<ProductDto>> GetProductsAsync();
-        Task UpdateProductAsync(Guid id, UpdateProductDto product);
+        Task<IEnumerable<ProductDto>> GetProductsAsync(int pageIndex, int pageSize);
+        Task UpdateProductAsync(Guid id, UpdateProductDto dto);
         Task DeleteProductAsync(Guid id);
         Task RestoreProductAsync(Guid id);
     }

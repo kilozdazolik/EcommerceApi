@@ -25,6 +25,36 @@ namespace kilozdazolik.Ecommerce.API.Features.Products
 
             return Ok(product);
         }
+
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts(
+        [FromQuery] int pageIndex = 1,
+        [FromQuery] int pageSize = 10)
+        {
+            var products = await service.GetProductsAsync(pageIndex, pageSize);
+            return Ok(products);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<ActionResult> UpdateProduct(Guid id, UpdateProductDto updatedProduct)
+        {
+            await service.UpdateProductAsync(id, updatedProduct);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteProduct(Guid id)
+        {
+            await service.DeleteProductAsync(id);
+            return NoContent();
+        }
+
+        [HttpPut("{id}/restore")]
+        public async Task<ActionResult> RestoreProduct(Guid id)
+        {
+            await service.RestoreProductAsync(id);
+            return NoContent();
+        }
     }
 
 }
